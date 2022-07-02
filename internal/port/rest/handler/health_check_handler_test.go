@@ -1,6 +1,7 @@
 package handler_test
 
 import (
+	"github.com/micheltank/eth-fee-calculator/internal/infra/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,7 +22,8 @@ func TestHealthCheck(t *testing.T) {
 		w := httptest.NewRecorder()
 		_, r := gin.CreateTestContext(w)
 
-		handler.MakeHealthCheckHandler(r)
+		err := handler.MakeHealthCheckHandler(r, config.DbConfig{})
+		assert.NoError(t, err)
 
 		req, err := http.NewRequest("GET", route, nil)
 		assert.NoError(t, err)

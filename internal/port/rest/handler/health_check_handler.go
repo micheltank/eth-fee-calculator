@@ -1,18 +1,31 @@
 package handler
 
 import (
-	"net/http"
+	"github.com/micheltank/eth-fee-calculator/internal/infra/config"
+	"github.com/pkg/errors"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hellofresh/health-go/v4"
+	healthPostgres "github.com/hellofresh/health-go/v4/checks/postgres"
 )
 
-func MakeHealthCheckHandler(routerGroup gin.IRoutes) {
-	routerGroup.GET("/health-check", func(c *gin.Context) {
-		HealthCheck(c)
-	})
-}
+func MakeHealthCheckHandler(routerGroup gin.IRoutes, dbConfig config.DbConfig) error {
+	h, err := health.New(health.WithChecks(health.Config{
+		Name:      "postgres",
+		Timeout:   time.Second * 2,
+		SkipOnErr: false,
+		Check: healthPostgres.New(healthPostgres.Config{
+			DSN: dbConfig.BuildURL(),
+		}),
+	}))
+	if err != nil {
+		return errors.Wrap(err, "MakeHealthCheckHandler: failed to initialize health check")
+	}
 
-func HealthCheck(c *gin.Context) {
-	// TODO: add db
-	c.Writer.WriteHeader(http.StatusOK)
+	routerGroup.GET("/health-check", func(c *gin.Context) {
+		h.HandlerFunc(c.Writer, c.Request)
+	})
+
+	return nil
 }

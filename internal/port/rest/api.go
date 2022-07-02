@@ -37,16 +37,18 @@ func NewServer(config config.Config) (*Api, error) {
 	v1 := base.Group("/v1")
 
 	// di
-	dataSourceName := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", config.DbConfig.User, config.DbConfig.Password, config.DbConfig.Host, config.DbConfig.Port, config.DbConfig.Name)
-	db, err := sql.Open("postgres", dataSourceName)
+	db, err := sql.Open("postgres", config.DbConfig.BuildURL())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open postgres connection")
+		return nil, errors.Wrap(err, "NewServer: failed to open postgres connection")
 	}
 	transactionsRepository := repository.NewTransactionPostgreSql(db)
 	service := application.NewService(transactionsRepository)
 
 	// handlers
-	handler.MakeHealthCheckHandler(base)
+	err = handler.MakeHealthCheckHandler(base, config.DbConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "NewServer: failed to create health check handler")
+	}
 	handler.MakeTransactionHandler(v1, service)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -62,7 +64,7 @@ func (api *Api) Run() <-chan error {
 	out := make(chan error)
 	go func() {
 		if err := api.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			out <- errors.Wrap(err, "failed to listen and serve api")
+			out <- errors.Wrap(err, "Run: failed to listen and serve api")
 		}
 	}()
 	return out
