@@ -8,3 +8,20 @@ services:
       POSTGRES_PASSWORD: test
     ports:
       - "5432:5432"
+    networks:
+      - app
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env.example
+    depends_on:
+      - database
+    networks:
+      - app
+    ports:
+      - "8080:8080"
+
+networks:
+  app:
+    driver: bridge
