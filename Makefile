@@ -2,7 +2,7 @@ deps:
 	go mod tidy
 
 run:
-	set -o allexport && source env.example && go run cmd/main.go
+	set -o allexport && source env.example && go run cmd/rest/main.go
 
 first_run: deps run
 
