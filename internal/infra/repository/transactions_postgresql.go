@@ -16,7 +16,9 @@ func NewTransactionPostgreSql(db *sql.DB) *TransactionPostgreSql {
 	}
 }
 
-func (r *TransactionPostgreSql) GetTransactionsPerHour(from, to int64) ([]domain.TransactionCostPerHour, error) {
+func (r *TransactionPostgreSql) GetTransactionsPerHour(from, to int64, page int) ([]domain.TransactionCostPerHour, error) {
+	limit, offset := getLimitAndOffset(page)
+
 	rows, err := r.db.Query(`SELECT
 							date_trunc('hour', t.block_time) as hour,
 							round(sum((t.gas_used * t.gas_price)/power(10, 18))::numeric, 2) as gas_cost
@@ -25,7 +27,8 @@ func (r *TransactionPostgreSql) GetTransactionsPerHour(from, to int64) ([]domain
 						  AND t.to != '0x0000000000000000000000000000000000000000'
 						  AND EXTRACT(EPOCH FROM (t.block_time AT TIME ZONE 'UTC')) BETWEEN $1 AND $2
 						GROUP BY hour
-						LIMIT 10`, from, to) // TODO: implement limit
+						ORDER BY hour
+						LIMIT $3 OFFSET $4`, from, to, limit, offset)
 	if err != nil {
 		return []domain.TransactionCostPerHour{}, err
 	}
@@ -41,4 +44,13 @@ func (r *TransactionPostgreSql) GetTransactionsPerHour(from, to int64) ([]domain
 		transactions = append(transactions, transaction)
 	}
 	return transactions, nil
+}
+
+func getLimitAndOffset(page int) (int, int) {
+	limit := 12
+	if page <= 0 {
+		page = 1
+	}
+	offset := limit * (page - 1)
+	return limit, offset
 }

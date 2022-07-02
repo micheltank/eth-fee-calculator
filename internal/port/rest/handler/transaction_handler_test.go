@@ -95,7 +95,7 @@ func TestV1GetTransactionCostsPerHour(t *testing.T) {
 			t.Fatal(err)
 		}
 		apiError := presenter.ApiError{
-			Key: "error.validationError.request",
+			Key: "error.validation.request",
 		}
 		g.Expect(apiError.Key).Should(
 			Equal(got.Key))
@@ -103,8 +103,8 @@ func TestV1GetTransactionCostsPerHour(t *testing.T) {
 	t.Run("Get transaction with absent query param", func(t *testing.T) {
 		g := NewGomegaWithT(t)
 
-		var from int64 = 1599476913
-		var to int64 = 1599649713
+		var from int64 = 0
+		var to int64 = 0
 
 		var transactions []domain.TransactionCostPerHour
 		service := mockService(t, from, to, transactions, nil)
@@ -130,7 +130,7 @@ func TestV1GetTransactionCostsPerHour(t *testing.T) {
 			t.Fatal(err)
 		}
 		apiError := presenter.ApiError{
-			Key: "error.validationError.request",
+			Key: "error.validation.request",
 		}
 		g.Expect(apiError.Key).Should(
 			Equal(got.Key))
@@ -169,8 +169,8 @@ func mockService(t *testing.T, from, to int64, transactionResponse []domain.Tran
 	ctrl := gomock.NewController(t)
 	service := mockApplication.NewMockTransactionService(ctrl)
 	service.EXPECT().
-		GetTransactionsPerHour(gomock.Eq(from), gomock.Eq(to)).
-		DoAndReturn(func(from, to int64) ([]domain.TransactionCostPerHour, error) {
+		GetTransactionsPerHour(gomock.Eq(from), gomock.Eq(to), gomock.Any()).
+		DoAndReturn(func(from, to int64, page int) ([]domain.TransactionCostPerHour, error) {
 			return transactionResponse, errorResponse
 		}).
 		AnyTimes()

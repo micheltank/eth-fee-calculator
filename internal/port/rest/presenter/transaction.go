@@ -4,6 +4,12 @@ import (
 	"github.com/micheltank/eth-fee-calculator/internal/domain"
 )
 
+type TransactionCostsPerHourParams struct {
+	From int64 `form:"from" validate:"required"`
+	To   int64 `form:"to" validate:"required"`
+	Page int   `form:"page"`
+}
+
 type TransactionCostPerHourResponse struct {
 	Time  int64   `json:"t"`
 	Value float64 `json:"v"`

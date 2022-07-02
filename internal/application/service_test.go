@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	
+
 	"github.com/micheltank/eth-fee-calculator/internal/application"
 	"github.com/micheltank/eth-fee-calculator/internal/application/mock"
 	"github.com/micheltank/eth-fee-calculator/internal/domain"
@@ -32,15 +32,15 @@ func TestService(t *testing.T) {
 	errorExpected := errors.New("dummy error")
 
 	repository.EXPECT().
-		GetTransactionsPerHour(gomock.Eq(from), gomock.Eq(to)).
-		DoAndReturn(func(from, to int64) ([]domain.TransactionCostPerHour, error) {
+		GetTransactionsPerHour(gomock.Eq(from), gomock.Eq(to), 1).
+		DoAndReturn(func(from, to int64, page int) ([]domain.TransactionCostPerHour, error) {
 			return transactionsPerHourExpected, nil
 		}).
 		AnyTimes()
 
 	repository.EXPECT().
-		GetTransactionsPerHour(gomock.Eq(int64(1)), gomock.Eq(int64(2))).
-		DoAndReturn(func(from, to int64) ([]domain.TransactionCostPerHour, error) {
+		GetTransactionsPerHour(gomock.Eq(int64(1)), gomock.Eq(int64(2)), 1).
+		DoAndReturn(func(from, to int64, page int) ([]domain.TransactionCostPerHour, error) {
 			return nil, errorExpected
 		}).
 		AnyTimes()
@@ -50,7 +50,7 @@ func TestService(t *testing.T) {
 
 		service := application.NewService(repository)
 
-		transactionsPerHour, err := service.GetTransactionsPerHour(from, to)
+		transactionsPerHour, err := service.GetTransactionsPerHour(from, to, 1)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(transactionsPerHour).Should(
@@ -64,7 +64,7 @@ func TestService(t *testing.T) {
 
 		service := application.NewService(repository)
 
-		transactionsPerHour, err := service.GetTransactionsPerHour(int64(1), int64(2))
+		transactionsPerHour, err := service.GetTransactionsPerHour(int64(1), int64(2), 1)
 		g.Expect(errorExpected).Should(MatchError(errors.Cause(err)))
 		g.Expect(transactionsPerHour).Should(
 			BeEmpty())

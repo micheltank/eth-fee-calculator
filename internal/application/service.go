@@ -7,11 +7,11 @@ import (
 )
 
 type Service struct {
-	repository domain.TransactionsRepository
+	repository Repository
 }
 
 type Repository interface {
-	GetTransactionsPerHour(from, to int64) ([]domain.TransactionCostPerHour, error)
+	GetTransactionsPerHour(from, to int64, page int) ([]domain.TransactionCostPerHour, error)
 }
 
 func NewService(repository Repository) *Service {
@@ -20,8 +20,8 @@ func NewService(repository Repository) *Service {
 	}
 }
 
-func (s *Service) GetTransactionsPerHour(from, to int64) ([]domain.TransactionCostPerHour, error) {
-	transactions, err := s.repository.GetTransactionsPerHour(from, to)
+func (s *Service) GetTransactionsPerHour(from, to int64, page int) ([]domain.TransactionCostPerHour, error) {
+	transactions, err := s.repository.GetTransactionsPerHour(from, to, page)
 	if err != nil {
 		return []domain.TransactionCostPerHour{}, errors.Wrap(err, "GetTransactionsPerHour: failed to get data from repository")
 	}

@@ -35,16 +35,16 @@ func (m *MockTransactionService) EXPECT() *MockTransactionServiceMockRecorder {
 }
 
 // GetTransactionsPerHour mocks base method.
-func (m *MockTransactionService) GetTransactionsPerHour(from, to int64) ([]domain.TransactionCostPerHour, error) {
+func (m *MockTransactionService) GetTransactionsPerHour(from, to int64, page int) ([]domain.TransactionCostPerHour, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTransactionsPerHour", from, to)
+	ret := m.ctrl.Call(m, "GetTransactionsPerHour", from, to, page)
 	ret0, _ := ret[0].([]domain.TransactionCostPerHour)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTransactionsPerHour indicates an expected call of GetTransactionsPerHour.
-func (mr *MockTransactionServiceMockRecorder) GetTransactionsPerHour(from, to interface{}) *gomock.Call {
+func (mr *MockTransactionServiceMockRecorder) GetTransactionsPerHour(from, to, page interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactionsPerHour", reflect.TypeOf((*MockTransactionService)(nil).GetTransactionsPerHour), from, to)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactionsPerHour", reflect.TypeOf((*MockTransactionService)(nil).GetTransactionsPerHour), from, to, page)
 }

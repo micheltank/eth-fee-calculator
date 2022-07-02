@@ -1,25 +1,22 @@
 package handler
 
 import (
-	"errors"
-	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
-	"github.com/hashicorp/go-multierror"
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
+	"net/http"
 
 	"github.com/micheltank/eth-fee-calculator/internal/domain"
 	"github.com/micheltank/eth-fee-calculator/internal/port/rest/presenter"
 )
 
 type TransactionService interface {
-	GetTransactionsPerHour(from int64, to int64) ([]domain.TransactionCostPerHour, error)
+	GetTransactionsPerHour(from, to int64, page int) ([]domain.TransactionCostPerHour, error)
 }
 
 func MakeTransactionHandler(routerGroup gin.IRoutes, service TransactionService) {
 	routerGroup.GET("/transactions/cost-per-hour", func(c *gin.Context) {
+		c.Header("Content-Type", "application/json")
 		V1GetTransactionCostsPerHour(c, service)
 	})
 }
@@ -36,14 +33,14 @@ func MakeTransactionHandler(routerGroup gin.IRoutes, service TransactionService)
 // @Error 400 {object} presenter.ApiError
 // @Router /transactions/cost-per-hour [get]
 func V1GetTransactionCostsPerHour(c *gin.Context, service TransactionService) {
-	from, to, err := getQueryParams(c)
+	params, err := getQueryParams(c)
 	if err != nil {
 		logrus.WithError(err).Warn("V1GetTransactionCostsPerHour received invalid input from client")
-		c.JSON(http.StatusBadRequest, presenter.ApiError{Key: "error.validationError.request", Message: err.Error()})
+		c.JSON(http.StatusBadRequest, presenter.ApiError{Key: "error.validation.request", Message: err.Error()})
 
 		return
 	}
-	transactions, err := service.GetTransactionsPerHour(from, to)
+	transactions, err := service.GetTransactionsPerHour(params.From, params.To, params.Page)
 	if err != nil {
 		logrus.WithError(err).Error("V1GetTransactionCostsPerHour returned InternalServerError")
 		c.Status(http.StatusInternalServerError)
@@ -53,28 +50,19 @@ func V1GetTransactionCostsPerHour(c *gin.Context, service TransactionService) {
 	c.JSON(http.StatusOK, presenter.NewTransactionCostsPerHourResponse(transactions))
 }
 
-func getQueryParams(c *gin.Context) (int64, int64, error) {
-	var result error
+func getQueryParams(c *gin.Context) (presenter.TransactionCostsPerHourParams, error) {
+	var params presenter.TransactionCostsPerHourParams
+	err := c.BindQuery(&params)
+	if err != nil {
+		return params, err
+	}
 
-	from, err := getQueryParam(c, "from")
+	err = validator.New().Struct(params)
 	if err != nil {
-		result = multierror.Append(result, err)
-	}
-	to, err := getQueryParam(c, "to")
-	if err != nil {
-		result = multierror.Append(result, err)
-	}
-	return from, to, err
-}
+		validationErrors := err.(validator.ValidationErrors)
 
-func getQueryParam(c *gin.Context, queryParamName string) (int64, error) {
-	fromParam := c.Query(queryParamName)
-	if fromParam == "" {
-		return 0, errors.New(fmt.Sprintf("'%s' query param is missing", queryParamName))
+		return presenter.TransactionCostsPerHourParams{}, validationErrors
 	}
-	from, err := strconv.ParseInt(fromParam, 10, 64)
-	if err != nil {
-		return 0, errors.New(fmt.Sprintf("query param '%s' with value '%d' has invalid type, got: '%T', expected: 'int64'", queryParamName, from, from))
-	}
-	return from, nil
+
+	return params, nil
 }
