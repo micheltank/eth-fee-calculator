@@ -2,8 +2,8 @@ package repository
 
 import (
 	"database/sql"
-
 	"github.com/micheltank/eth-fee-calculator/internal/domain"
+	"time"
 )
 
 type TransactionPostgreSql struct {
@@ -21,14 +21,15 @@ func (r *TransactionPostgreSql) GetTransactionsPerHour(from, to int64, page int)
 
 	rows, err := r.db.Query(`SELECT
 							date_trunc('hour', t.block_time) as hour,
-							round(sum((t.gas_used * t.gas_price)/power(10, 18))::numeric, 2) as gas_cost
+							round(sum((t.gas_used * t.gas_price))/power(10, 18)::numeric, 2) as gas_cost
 						FROM transactions t
-						WHERE t.from != '0x0000000000000000000000000000000000000000'
+						WHERE t.status = 'true'
+						  AND t.from != '0x0000000000000000000000000000000000000000'
 						  AND t.to != '0x0000000000000000000000000000000000000000'
-						  AND EXTRACT(EPOCH FROM (t.block_time AT TIME ZONE 'UTC')) BETWEEN $1 AND $2
+						  AND t.block_time BETWEEN $1 AND $2
 						GROUP BY hour
 						ORDER BY hour
-						LIMIT $3 OFFSET $4`, from, to, limit, offset)
+						LIMIT $3 OFFSET $4`, time.Unix(from, 0).UTC(), time.Unix(to, 0).UTC(), limit, offset)
 	if err != nil {
 		return []domain.TransactionCostPerHour{}, err
 	}
