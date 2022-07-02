@@ -14,8 +14,8 @@ import (
 )
 
 func TestHealthCheck(t *testing.T) {
-
-	t.Run("Health check success", func(t *testing.T) {
+	// TODO: test success
+	t.Run("Health check unavailable", func(t *testing.T) {
 		g := NewGomegaWithT(t)
 
 		route := "/health-check"
@@ -31,6 +31,6 @@ func TestHealthCheck(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		g.Expect(w.Code).Should(
-			Equal(http.StatusOK))
+			Equal(http.StatusServiceUnavailable))
 	})
 }
