@@ -19,7 +19,7 @@ func NewTransactionPostgreSql(db *sql.DB) *TransactionPostgreSql {
 func (r *TransactionPostgreSql) GetTransactionsPerHour(from, to int64) ([]domain.TransactionCostPerHour, error) {
 	rows, err := r.db.Query(`SELECT
 							date_trunc('hour', t.block_time) as hour,
-							sum((t.gas_used * t.gas_price)/power(10, 18)) as gas_cost
+							round(sum((t.gas_used * t.gas_price)/power(10, 18))::numeric, 2) as gas_cost
 						FROM transactions t
 						WHERE t.from != '0x0000000000000000000000000000000000000000'
 						  AND t.to != '0x0000000000000000000000000000000000000000'
