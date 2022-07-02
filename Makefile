@@ -24,4 +24,4 @@ swagger:
 docker_run:
 	docker compose up -d
 
-all: deps lint docker_build test swagger docker_compose
+all: deps lint docker_build test swagger docker_run
