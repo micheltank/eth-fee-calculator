@@ -11,9 +11,7 @@ services:
     networks:
       - app
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: micheltank/eth-fee-calculator:0.1.0
     env_file: .env.example
     depends_on:
       - database
@@ -21,6 +19,17 @@ services:
       - app
     ports:
       - "8080:8080"
+#  app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    env_file: .env
+#    depends_on:
+#      - database
+#    networks:
+#      - app
+#    ports:
+#      - "8080:8080"
 
 networks:
   app:
