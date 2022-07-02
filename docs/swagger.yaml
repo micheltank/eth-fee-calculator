@@ -1,0 +1,45 @@
+basePath: /api/v1
+definitions:
+  presenter.TransactionCostPerHourResponse:
+    properties:
+      t:
+        type: integer
+      v:
+        type: number
+    type: object
+info:
+  contact: {}
+  title: ETH Fee Calculator
+  version: "1.0"
+paths:
+  /transactions/cost-per-hour:
+    get:
+      description: Get transaction costs per hour
+      operationId: get-transaction-per-hour
+      parameters:
+      - description: Initial period to fetch the data
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Final period to fetch the data
+        in: query
+        name: to
+        required: true
+        type: string
+      - description: Pagination
+        in: query
+        name: page
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.TransactionCostPerHourResponse'
+      summary: Get transaction costs per hour
+      tags:
+      - Transactions
+swagger: "2.0"

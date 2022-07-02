@@ -19,7 +19,7 @@ test:
 	go test -v -cover -race ./...
 
 swagger:
-	swag init -g cmd/rest/main.go
+	swag init -g internal/port/rest/api.go
 
 docker_compose:
 	docker compose up -d

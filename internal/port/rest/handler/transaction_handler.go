@@ -28,6 +28,7 @@ func MakeTransactionHandler(routerGroup gin.IRoutes, service TransactionService)
 // @Tags Transactions
 // @Param from query string true "Initial period to fetch the data"
 // @Param to query string true "Final period to fetch the data"
+// @Param page query string true "Pagination"
 // @Produce json
 // @Success 200 {object} presenter.TransactionCostPerHourResponse
 // @Error 400 {object} presenter.ApiError
