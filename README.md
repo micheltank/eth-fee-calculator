@@ -1,81 +1,62 @@
-# Glassnode Code Challenge
+# ETH Fee Calculator
 
-The Glassnode Code Challenge is an opportunity to demonstrate your problem
-solving skills which we value a lot at Glassnode.
+An application to calculate ETH fees
 
-The challenge is specified a bit loosely on purpose to let you demonstrate your
-ability to take intermediate decisions by your own and your ability to explore
-a previously unknown topic by yourself. Results of this challenge will be an
-entrypoint for the further tech interview.
+## Running
 
-# The challenge
-
-Users of the Ethereum network are required to pay for each action a certain
-amount of ETH (called `fees`) roughly according to the following formula: `kind
-of action * the gas price`. Generally, the gas price increases in times of
-high activity/overloading, consequently increasing the total amount of fees
-spent by users. Ethereum recently experienced a significant increase in gas
-prices. It's interesting to analyze how much fees were spent by users on different
-kinds of actions. This can give insight into what kinds of actions were responsible
-for the increased gas prices. We can do this, by first filtering the transactions on the
-kind we are interested in and then summing the fees spent on those transactions.
-
-For this task, we're interested in how much fees in the Ethereum network have
-been spent by plain **ETH** transfers. So we want you to compute the hourly
-amount of fees spent by transactions between [externaly owned accounts][]
-(**EOA**). A transaction is considered to be between two **EOA** addresses if it's a
-direct **ETH** value transfer, i.e. `to` and `from` addresses of such a
-transaction should not be one of the contracts and not a special address
-`0x0000000000000000000000000000000000000000` used for contract creation. Fee
-computation is done in the following fashion: `gas_used *
-gas_price`. And of course we need some API to serve that information to the
-public.
-
-Provided repository includes a `docker-compose.yaml` ([docker-compose docs][])
-with a **database** service in it, which represents a preconfigured postgres database
-with a data snapshot of Ethereum transactions for a single day (07.09.2020). Contract
-addresses are present in the provided database in the `contracts` table, and transactions
-themselves in the `transactions` table. Note, that `gas_price` is stored in w units in
-the data snapshot.
-
-# Solution expectations
-
-The end solution should
-
-- include a REST API service listening on the port `8080` with an endpoint which serves data in the following JSON format:
-```
-[
-  {
-    "t": 1603114500,
-    "v": 123.45
-  },
-  ...
-]
+- **Option 1**: to run the application asap you can use docker-compose, as the images have already been built and uploaded to docker hub:
+```shell
+    make docker_run
 ```
 
-where `t` is a unix timestamp of the hour, and `v` is the amount of fees
-being paid for transactions between **EOA** addresses within that hour in
-ETH units.
+- **Option 2**: to run the application using go:
+```shell
+    make run
+```
 
-- be added to the services list in the provided
-  `docker-compose.yaml` and the solution must be able to start using
-  `docker-compose up` command
+## Documentation
 
-- be production ready
+- Swagger as the specification to document the API
+- After running the application, you can check the webpage at:
+    - http://localhost:8080/swagger/index.html
 
-You're free to choose the path and parameters for the endpoint as well as
-the implementation language (but prefereably it should be [golang][]).
+## Project's structure
 
-# How to approach the challenge
+```shell script
+📦eth-fee-calculator
+ ┣ 📂cmd
+ ┃ ┗ 📂rest
+ ┃ ┃ ┗ 📜main.go
+ ┣ 📂docs
+ ┣ 📂internal
+ ┃ ┣ 📂application
+ ┃ ┣ 📂domain
+ ┃ ┣ 📂infra
+ ┃ ┃ ┣ 📂config
+ ┃ ┃ ┗ 📂repository
+ ┃ ┗ 📂port
+ ┃ ┃ ┗ 📂rest
+ ┃ ┃ ┃ ┣ 📂handler
+ ┃ ┃ ┃ ┣ 📂presenter
+ ┗ ┗ ┗ ┗ 📜api.go
+```
 
-- We respect your time and the challenge is designed in such a way as not to
-  take more than 3-4 hours.
-- In your repo create `Solution.md` with a description of your reasoning
-  behind technical choices: trade-offs you might have made, anything you left out,
-  or what you might do differently if you would had additional time.
+## Code quality
+- **golangci-lint**: 0 lint errors
+- **unit testing**: 97.1% of code coverage
 
-[externaly owned accounts]: https://ethereum.org/en/whitepaper/#ethereum-accounts
-[golang]:https://golang.org/
-[gas]: https://ethereum.org/en/developers/docs/gas/
-[gastracker]: https://etherscan.io/gastracker
-[docker-compose docs]: https://docs.docker.com/compose/
+## Decisions
+
+- **Design**: Clean architecture
+- **Unit testing**: the libraries onsi/gomega and golang/mock are being used because their facility and popularity
+  - TODO:
+    - The health check could be better tested, adding test for success path
+- **Documentation**: Swagger GUI using swaggo and hosted on https://{host}/swagger
+- **Errors**: the logging is catching all errors and for the client can vary on response:
+    - if it is an internal error only, respond with a status code 500 without details
+    - if it is a client error, respond with a status code 4xx
+- **Performance**: this dataset is too large to be calculated every time it is requested. For the purpose of this project, it is fine, but it would make more sense to pre-calculate the data and consume from this prepared dataset. 
+- **Logging**: used logrus as it is quite complete and popular:
+  - TODO:
+    - standardization of the logs, like putting them in a json format
+    - track more data about request
